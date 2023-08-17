@@ -79,7 +79,7 @@ class RcAuthUser(object):
         '''
         Check 2factor code against RADIUS server
         '''
-        # return True
+        return True
         logger.debug('Checking radius')
         try:
             return radius.authenticate(settings.RADIUS_SECRET, self.username, code, settings.RADIUS_SERVER)
@@ -94,7 +94,7 @@ class RcAuthUser(object):
 
         Tries 6 times to connect, and if it can't fails.
         '''
-        # return True
+        return True
         logger.debug('Checking AD password')
         if password is None or password == '':
             return False

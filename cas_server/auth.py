@@ -74,7 +74,8 @@ class RcAuthUser(object):
         '''
         Check 2factor code against RADIUS server
         '''
-        return True
+        if settings.DEBUG and settings.SKIP_RADIUS:
+            return True
         # pylint: disable=unreachable
         logger.debug('Checking radius')
         try:
@@ -90,7 +91,8 @@ class RcAuthUser(object):
 
         Tries 6 times to connect, and if it can't fails.
         '''
-        return True
+        if settings.DEBUG and settings.SKIP_AD:
+            return True
         # pylint: disable=unreachable
         logger.debug('Checking AD password')
         if password is None or password == '':

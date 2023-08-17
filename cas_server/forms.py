@@ -9,7 +9,7 @@
 #
 # (c) 2015-2016 Valentin Samir
 """forms for the app"""
-from .default_settings import settings
+import sys
 
 from django import forms
 from django.forms import widgets
@@ -17,8 +17,8 @@ from django.forms import widgets
 import cas_server.utils as utils
 import cas_server.models as models
 from cas_server.auth import RcAuthUser
+from .default_settings import settings
 
-import sys
 if sys.version_info < (3, ):
     from django.utils.translation import ugettext_lazy as _
 else:
@@ -116,7 +116,7 @@ class UserCredential(BaseLogin):
     #: The user password
     password = forms.CharField(label=_('Password'), widget=forms.PasswordInput)
     #: The 2 factor code
-    code = forms.CharField(label=('Second'))
+    code = forms.CharField(label=_('Second'))
     #: A checkbox to ask to be warn before emiting a ticket for another service
     warn = forms.BooleanField(
         label=_('Warn me before logging me into other sites.'),
@@ -139,7 +139,7 @@ class UserCredential(BaseLogin):
                 cleaned_data["username"] = auth.username
             else:
                 raise forms.ValidationError(
-                    _(u"The credentials you provided cannot be determined to be authentic.")
+                    _("The credentials you provided cannot be determined to be authentic.")
                 )
         return cleaned_data
 
@@ -190,7 +190,7 @@ class FederateUserCredential(UserCredential):
         # raise before a ValidationError("bad user")
         except models.FederatedUser.DoesNotExist:  # pragma: no cover (should not happend)
             raise forms.ValidationError(
-                _(u"User not found in the temporary database, please try to reconnect")
+                _("User not found in the temporary database, please try to reconnect")
             )
         return cleaned_data
 

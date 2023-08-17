@@ -10,16 +10,11 @@
 #
 # (c) 2015-2016 Valentin Samir
 """Some authentication classes for the CAS"""
-import sys
 import logging
 import time
 import radius
 from ldap3 import Server, Connection
 from django.conf import settings
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-from django.db import connections, DatabaseError
 from ifxuser.models import IfxUser
 
 logger = logging.getLogger(__name__)
@@ -35,8 +30,8 @@ class RcAuthUser(object):
         '''
         for attr in ['RADIUS_SECRET', 'RADIUS_SERVER', 'AD_SERVER', 'AD_PORT']:
             if not hasattr(settings, attr) or not getattr(settings, attr):
-                logger.exception('%s must be defined in settings.py' % attr)
-                raise Exception('%s must be defined in settings.py' % attr)
+                logger.exception(f'{attr} must be defined in settings.py')
+                raise Exception(f'{attr} must be defined in settings.py')
         self.username = username
         self.attributes = None
 
@@ -80,11 +75,12 @@ class RcAuthUser(object):
         Check 2factor code against RADIUS server
         '''
         return True
+        # pylint: disable=unreachable
         logger.debug('Checking radius')
         try:
             return radius.authenticate(settings.RADIUS_SECRET, self.username, code, settings.RADIUS_SERVER)
         except Exception as e:
-            logger.exception('Unable to authenticate against RADIUS server %s: %s', (settings.RADIUS_SERVER, str(e)))
+            logger.exception(f'Unable to authenticate against RADIUS server {settings.RADIUS_SERVER}: {e}')
             return False
 
     def check_ad(self, password=None):
@@ -95,9 +91,11 @@ class RcAuthUser(object):
         Tries 6 times to connect, and if it can't fails.
         '''
         return True
+        # pylint: disable=unreachable
         logger.debug('Checking AD password')
         if password is None or password == '':
             return False
+        # pylint: disable=consider-using-f-string
         user = r"rc\%s" % self.username
 
         # Loop up to 5 times if there is a failure contacting the LDAP server
@@ -105,17 +103,17 @@ class RcAuthUser(object):
         maxtries = 2
         while True:
             try:
-                ldapurl = '%s:%d' % (settings.AD_SERVER, settings.AD_PORT)
-                logger.debug('Initializing LDAP connection to %s' % ldapurl)
+                ldapurl = f'{settings.AD_SERVER}:{settings.AD_PORT}'
+                logger.debug(f'Initializing LDAP connection to {ldapurl}')
                 server = Server(ldapurl, connect_timeout=5)
                 logger.debug("Attempting to bind")
                 conn = Connection(server, user=user, password=password)
                 return conn.bind()
-            except ldap.LDAPError as e:
+            except Exception as e:
                 if "Can't contact LDAP server" in str(e) and dnstry < maxtries:
-                    logger.info("LDAP server %s unavailable, trying again. %s" % (ldapurl, str(e)))
+                    logger.info(f'LDAP server {ldapurl} unavailable, trying again. {e}')
                     dnstry += 1
                     time.sleep(1)
                 else:
-                    logger.error("Error connecting to LDAP %s\n%s, %s" % (str(e), settings.AD_SERVER, settings.AD_PORT))
+                    logger.error(f'Error connecting to LDAP {e}\n{settings.AD_SERVER}, {settings.AD_PORT}')
                     return False

@@ -24,7 +24,7 @@ else:
 
 try:
     #: URL to the logo showed in the up left corner on the default templates.
-    CAS_LOGO_URL = static("cas_server/logo.png")
+    CAS_LOGO_URL = static("cas_server/rclogo.png")
     #: URL to the favicon (shortcut icon) used by the default templates. Default is a key icon.
     CAS_FAVICON_URL = static("cas_server/favicon.ico")
 # is settings.DEBUG is False and collectstatics has not been run yet, the static function will

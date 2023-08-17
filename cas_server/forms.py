@@ -16,6 +16,7 @@ from django.forms import widgets
 
 import cas_server.utils as utils
 import cas_server.models as models
+from cas_server.auth import RcAuthUser
 
 import sys
 if sys.version_info < (3, ):
@@ -109,11 +110,13 @@ class UserCredential(BaseLogin):
      """
     #: The user username
     username = forms.CharField(
-        label=_('username'),
+        label=_('RC Username'),
         widget=forms.TextInput(attrs={'autofocus': 'autofocus'})
     )
     #: The user password
-    password = forms.CharField(label=_('password'), widget=forms.PasswordInput)
+    password = forms.CharField(label=_('Password'), widget=forms.PasswordInput)
+    #: The 2 factor code
+    code = forms.CharField(label=('Second'))
     #: A checkbox to ask to be warn before emiting a ticket for another service
     warn = forms.BooleanField(
         label=_('Warn me before logging me into other sites.'),
@@ -130,16 +133,15 @@ class UserCredential(BaseLogin):
             :rtype: dict
         """
         cleaned_data = super(UserCredential, self).clean()
-        if "username" in cleaned_data and "password" in cleaned_data:
-            auth = utils.import_attr(settings.CAS_AUTH_CLASS)(cleaned_data["username"])
-            if auth.test_password(cleaned_data["password"]):
+        if "username" in cleaned_data and "password" in cleaned_data and "code" in cleaned_data:
+            auth = RcAuthUser(cleaned_data["username"])
+            if auth.test_password(cleaned_data["password"], cleaned_data["code"]):
                 cleaned_data["username"] = auth.username
             else:
                 raise forms.ValidationError(
                     _(u"The credentials you provided cannot be determined to be authentic.")
                 )
         return cleaned_data
-
 
 class FederateUserCredential(UserCredential):
     """
